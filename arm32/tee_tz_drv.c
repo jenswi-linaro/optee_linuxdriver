@@ -894,7 +894,7 @@ static int register_outercache_mutex(struct tee_tz *ptee, bool reg)
 	paddr = param.a2;
 	dev_dbg(DEV, "outer cache shared mutex paddr 0x%lx\n", paddr);
 
-	vaddr = ioremap_cached(paddr, sizeof(u32));
+	vaddr = ioremap_cache(paddr, sizeof(u32));
 	if (vaddr == NULL) {
 		dev_warn(DEV, "TZ l2cc mutex disabled: ioremap failed\n");
 		ret = -ENOMEM;
@@ -964,7 +964,7 @@ static int configure_shm(struct tee_tz *ptee)
 	ptee->shm_cached = (bool)param.a3;
 
 	if (ptee->shm_cached)
-		ptee->shm_vaddr = ioremap_cached(ptee->shm_paddr, shm_size);
+		ptee->shm_vaddr = ioremap_cache(ptee->shm_paddr, shm_size);
 	else
 		ptee->shm_vaddr = ioremap_nocache(ptee->shm_paddr, shm_size);
 
@@ -1080,6 +1080,7 @@ static int tz_tee_init(struct platform_device *pdev)
 
 	tee_tz = ptee;
 
+#if 0
 	/* To replace by a syscall */
 #ifndef CONFIG_ARM_TZ_SUPPORT
 	dev_err(tee->dev,
@@ -1087,6 +1088,7 @@ static int tz_tee_init(struct platform_device *pdev)
 		__func__, tee->name);
 	tee->conf = TEE_CONF_FW_NOT_CAPABLE;
 	return 0;
+#endif
 #endif
 
 	tee->shm_flags = TEEC_MEM_INPUT | TEEC_MEM_OUTPUT;

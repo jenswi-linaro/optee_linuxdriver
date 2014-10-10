@@ -78,10 +78,10 @@ int tee_context_dump(struct tee *tee, char *buff, size_t len)
 						       entry);
 
 					pos += sprintf(buff + pos,
-						       " [%02d.%d] shm=%p paddr=%08x "
-						       "kaddr=%p s=%d(%d)\n",
+						       " [%02d.%d] shm=%p paddr=%pad "
+						       "kaddr=%p s=%zu(%zu)\n",
 						       i, j, shm,
-						       shm->paddr,
+						       &shm->paddr,
 						       shm->kaddr,
 						       shm->size_req,
 						       shm->size_alloc);

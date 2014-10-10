@@ -64,13 +64,14 @@ static int tee_copy_to_user(struct tee_context *ctx, void *to, void *from,
 	}
 }
 
-static void tee_put_user(struct tee_context *ctx, int from, int *to)
-{
-	if (ctx->usr_client)
-		put_user(from, to);
-	else
-		*to = from;
-}
+/* Defined as macro to let the put_user macro see the types */
+#define tee_put_user(ctx, from, to)				\
+	do {							\
+		if ((ctx)->usr_client)				\
+			put_user(from, to);			\
+		else						\
+			*to = from;				\
+	} while (0)
 
 static inline int tee_session_is_opened(struct tee_session *sess)
 {
@@ -521,7 +522,7 @@ static int _copy_op(struct tee_session *sess, struct tee_cmd_io *cmd_io,
 		case TEEC_MEMREF_TEMP_OUTPUT:
 		case TEEC_MEMREF_TEMP_INOUT:
 			dev_dbg(_DEV_TEE,
-				"> param[%d]:type=%d,buffer=%p,s=%d (TMPREF)\n",
+				"> param[%d]:type=%d,buffer=%p,s=%zu (TMPREF)\n",
 				idx, type, op.params[idx].tmpref.buffer,
 				op.params[idx].tmpref.size);
 			param->params[idx].shm =
@@ -533,7 +534,7 @@ static int _copy_op(struct tee_session *sess, struct tee_cmd_io *cmd_io,
 							     type);
 			if (!param->params[idx].shm)
 				return -ENOMEM;
-			dev_dbg(_DEV_TEE, "< %d %p:%d (TMPREF)\n",
+			dev_dbg(_DEV_TEE, "< %d %p:%zu (TMPREF)\n",
 				idx, (void *)param->params[idx].shm->paddr,
 				param->params[idx].shm->size_req);
 			break;
@@ -566,7 +567,7 @@ static int _copy_op(struct tee_session *sess, struct tee_cmd_io *cmd_io,
 			if (check_shm
 			    (tee, (struct tee_shm_io *)&param->c_shm[idx])) {
 				dev_dbg(_DEV_TEE,
-					"> param[%d]:type=%d,buffer=%p, s=%d (WHOLE)\n",
+					"> param[%d]:type=%d,buffer=%p, s=%zu (WHOLE)\n",
 					idx, type, op.params[idx].tmpref.buffer,
 					param->c_shm[idx].size);
 
@@ -578,7 +579,7 @@ static int _copy_op(struct tee_session *sess, struct tee_cmd_io *cmd_io,
 				if (!param->params[idx].shm)
 					return -ENOMEM;
 
-				dev_dbg(_DEV_TEE, "< %d %p:%d (WHOLE)\n",
+				dev_dbg(_DEV_TEE, "< %d %p:%zu (WHOLE)\n",
 					idx,
 					(void *)param->params[idx].shm->paddr,
 					param->params[idx].shm->size_req);
@@ -698,7 +699,7 @@ static int _copy_op(struct tee_session *sess, struct tee_cmd_io *cmd_io,
 
 
 				}
-				dev_dbg(_DEV_TEE, "< %d %p:%d (PARTIAL)\n",
+				dev_dbg(_DEV_TEE, "< %d %p:%zu (PARTIAL)\n",
 					idx,
 					(void *)param->params[idx].shm->paddr,
 					param->params[idx].shm->size_req);
@@ -844,7 +845,7 @@ static void _update_client_tee_cmd(struct tee_session *sess,
 				if (size !=
 					cmd_io->op->params[idx].tmpref.size) {
 					dev_dbg(_DEV_TEE,
-						"Size has been updated by the TA %d != %d\n",
+						"Size has been updated by the TA %zu != %zu\n",
 						size,
 						cmd_io->op->params[idx].tmpref.
 						size);
@@ -864,7 +865,7 @@ static void _update_client_tee_cmd(struct tee_session *sess,
 				 * the shared buffer length */
 				if (size > cmd_io->op->params[idx].tmpref.size)
 					dev_err(_DEV_TEE,
-						"  *** Wrong returned size from %d:%d > %d\n",
+						"  *** Wrong returned size from %d:%zu > %zu\n",
 						idx, size,
 						cmd_io->op->params[idx].tmpref.
 						size);
@@ -886,7 +887,7 @@ static void _update_client_tee_cmd(struct tee_session *sess,
 				if (size !=
 					cmd_io->op->params[idx].memref.size) {
 					dev_dbg(_DEV_TEE,
-						"Size has been updated by the TA %d != %d\n",
+						"Size has been updated by the TA %zu != %zu\n",
 						size,
 						cmd_io->op->params[idx].memref.
 						size);
@@ -899,7 +900,7 @@ static void _update_client_tee_cmd(struct tee_session *sess,
 				 * the shared buffer length */
 				if (size > cmd->param.c_shm[idx].size)
 					dev_err(_DEV_TEE,
-						"  *** Wrong returned size from %d:%d > %d\n",
+						"  *** Wrong returned size from %d:%zu > %zu\n",
 						idx, size,
 						cmd->param.c_shm[idx].size);
 
@@ -933,7 +934,7 @@ static void _update_client_tee_cmd(struct tee_session *sess,
 				if (size !=
 					cmd_io->op->params[idx].memref.size) {
 					dev_dbg(_DEV_TEE,
-						"Size has been updated by the TA %d != %d\n",
+						"Size has been updated by the TA %zu != %zu\n",
 						size,
 						cmd_io->op->params[idx].memref.
 						size);
@@ -947,7 +948,7 @@ static void _update_client_tee_cmd(struct tee_session *sess,
 				if ((offset + size) >
 				    cmd->param.c_shm[idx].size)
 					dev_err(_DEV_TEE,
-						"  *** Wrong returned size from %d:%d +%d > %d\n",
+						"  *** Wrong returned size from %d:%d +%zu > %zu\n",
 						idx, offset, size,
 						cmd->param.c_shm[idx].size);
 

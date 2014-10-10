@@ -9,7 +9,9 @@
 #include "tee_shm.h"
 
 #define INMSG dev_dbg(_DEV(tee), "%s: >\n", __func__)
-#define OUTMSG(val) dev_dbg(_DEV(tee), "%s: < %d\n", __func__, (int)val)
+#define OUTMSG(val) \
+	dev_dbg(_DEV(tee), "%s: < %lld\n", __func__, \
+		(long long int)(uintptr_t)val)
 
 /* TODO
 #if (sizeof(TEEC_SharedMemory) != sizeof(tee_shm))
@@ -328,11 +330,12 @@ int check_shm(struct tee *tee, struct tee_shm_io *shm_io)
 	INMSG;
 
 	if (shm_io->flags & TEE_SHM_FROM_KAPI) {
-		shm = (struct tee_shm *)shm_io->fd_shm;
+		/* TODO fixme will not work on 64-bit platform */
+		shm = (struct tee_shm *)(uintptr_t)shm_io->fd_shm;
 		BUG_ON(!shm);
 		/* must be size_req but not in line with above test */
 		if (shm->size_req < shm_io->size) {
-			dev_err(tee->dev, "[%s] %p not big enough %x %d %d\n",
+			dev_err(tee->dev, "[%s] %p not big enough %x %zu %zu\n",
 				__func__, shm_io->buffer,
 				(unsigned int)shm->paddr, shm->size_req,
 				shm_io->size);
@@ -365,7 +368,7 @@ int check_shm(struct tee *tee, struct tee_shm_io *shm_io)
 
 	/* Contiguous ? */
 	if (vma->vm_end - vma->vm_start < shm_io->size) {
-		dev_err(tee->dev, "[%s] %p not big enough %x %ld %d\n",
+		dev_err(tee->dev, "[%s] %p not big enough %x %ld %zu\n",
 			__func__, shm_io->buffer,
 			shm ? (unsigned int)shm->paddr : 0,
 			vma->vm_end - vma->vm_start, shm_io->size);
@@ -409,7 +412,8 @@ struct tee_shm *tee_shm_get(struct tee_context *ctx, struct tee_shm_io *shm_io)
 	INMSG;
 
 	if (shm_io->flags & TEE_SHM_FROM_KAPI) {
-		shm = (struct tee_shm *)shm_io->fd_shm;
+		/* TODO fixme will not work on 64-bit platform */
+		shm = (struct tee_shm *)(uintptr_t)shm_io->fd_shm;
 		BUG_ON(!shm);
 		ret = ctx->tee->ops->shm_inc_ref(shm);
 		BUG_ON(!ret);	/* to do: path error */

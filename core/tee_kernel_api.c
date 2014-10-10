@@ -63,7 +63,9 @@ TEEC_Result TEEC_InitializeContext(const char *name, TEEC_Context *context)
 
 	ctx->usr_client = 0;
 
-	context->fd = (int)ctx;
+	/* TODO fixme will not work on 64-bit platform */
+	context->fd = (int)(uintptr_t)ctx;
+	BUG_ON(ctx != (struct tee_context *)(uintptr_t)context->fd);
 
 	pr_cont("%s: < ctx=%p is created\n", __func__, (void *)ctx);
 	return TEEC_SUCCESS;
@@ -78,7 +80,8 @@ TEEC_Result TEEC_FinalizeContext(TEEC_Context *context)
 				 && context->devname) ? context->devname : "");
 		return TEEC_ERROR_BAD_PARAMETERS;
 	}
-	tee_context_destroy((struct tee_context *)context->fd);
+	/* TODO fixme will not work on 64-bit platform */
+	tee_context_destroy((struct tee_context *)(uintptr_t)context->fd);
 	return TEEC_SUCCESS;
 }
 EXPORT_SYMBOL(TEEC_FinalizeContext);
@@ -114,7 +117,8 @@ TEEC_Result TEEC_OpenSession(TEEC_Context *context,
 
 	session->fd = 0;
 
-	ctx = (struct tee_context *)context->fd;
+	/* TODO fixme will not work on 64-bit platform */
+	ctx = (struct tee_context *)(uintptr_t)context->fd;
 	reset_tee_cmd(&cmd);
 	cmd.op = operation;
 	cmd.uuid = (TEEC_UUID *) destination;
@@ -131,7 +135,9 @@ TEEC_Result TEEC_OpenSession(TEEC_Context *context,
 			return TEEC_ERROR_COMMUNICATION;
 	} else {
 		*return_origin = cmd.origin;
-		session->fd = (int)sess;
+		/* TODO fixme will not work on 64-bit platform */
+		session->fd = (int)(uintptr_t)sess;
+		BUG_ON(sess != (struct tee_session *)(uintptr_t)session->fd);
 		return cmd.err;
 	}
 }
@@ -140,7 +146,9 @@ EXPORT_SYMBOL(TEEC_OpenSession);
 void TEEC_CloseSession(TEEC_Session *session)
 {
 	if (session && session->fd) {
-		struct tee_session *sess = (struct tee_session *)session->fd;
+		/* TODO fixme will not work on 64-bit platform */
+		struct tee_session *sess =
+			(struct tee_session *)(uintptr_t)session->fd;
 		tee_session_close_and_destroy(sess);
 	}
 }
@@ -158,7 +166,8 @@ TEEC_Result TEEC_InvokeCommand(TEEC_Session *session,
 	if (!session || !operation || !return_origin || !session->fd)
 		return TEEC_ERROR_BAD_PARAMETERS;
 
-	sess = (struct tee_session *)session->fd;
+	/* TODO fixme will not work on 64-bit platform */
+	sess = (struct tee_session *)(uintptr_t)session->fd;
 	reset_tee_cmd(&cmd);
 	cmd.cmd = commandID;
 	cmd.op = operation;
@@ -200,22 +209,23 @@ TEEC_Result TEEC_AllocateSharedMemory(TEEC_Context *context,
 	if (!context || !sharedMem)
 		return TEEC_ERROR_BAD_PARAMETERS;
 
-	ctx = (struct tee_context *)context->fd;
+	/* TODO fixme will not work on 64-bit platform */
+	ctx = (struct tee_context *)(uintptr_t)context->fd;
 
 	tee_shm = tee_shm_alloc(ctx, sharedMem->size, sharedMem->flags);
 	if (!tee_shm) {
 		pr_err
-		    ("TEEC_AllocateSharedMemory: tee_shm_allocate(%d) failed\n",
+		    ("TEEC_AllocateSharedMemory: tee_shm_allocate(%zu) failed\n",
 		     sharedMem->size);
 		return TEEC_ERROR_OUT_OF_MEMORY;
 	}
 
-	pr_info("TEEC_AllocateSharedMemory (%d) => paddr = %p, flags %x\n",
+	pr_info("TEEC_AllocateSharedMemory (%zu) => paddr = %p, flags %x\n",
 		sharedMem->size, (void *)tee_shm->paddr, tee_shm->flags);
 
 	sharedMem->buffer = ioremap_nocache(tee_shm->paddr, sharedMem->size);
 	if (!sharedMem->buffer) {
-		pr_err("TEEC_AllocateSharedMemory: ioremap_nocache(%p, %d) failed\n",
+		pr_err("TEEC_AllocateSharedMemory: ioremap_nocache(%p, %zu) failed\n",
 		     (void *)tee_shm->paddr, sharedMem->size);
 		tee_shm_free(tee_shm);
 		return TEEC_ERROR_OUT_OF_MEMORY;
@@ -223,7 +233,9 @@ TEEC_Result TEEC_AllocateSharedMemory(TEEC_Context *context,
 
 	sharedMem->registered = 0;
 	sharedMem->flags |= tee_shm->flags;
-	sharedMem->fd = (int)tee_shm;
+	/* TODO fixme will not work on 64-bit platform */
+	sharedMem->fd = (int)(uintptr_t)tee_shm;
+	BUG_ON(tee_shm != (struct tee_shm *)(uintptr_t)sharedMem->fd);
 
 	return TEEC_SUCCESS;
 }
@@ -239,7 +251,8 @@ void TEEC_ReleaseSharedMemory(TEEC_SharedMemory *sharedMemory)
 	if (sharedMemory->registered)
 		return;
 
-	shm = (struct tee_shm *)sharedMemory->fd;
+	/* TODO fixme will not work on 64-bit platform */
+	shm = (struct tee_shm *)(uintptr_t)sharedMemory->fd;
 
 	pr_info("TEEC_ReleaseSharedMemory (vaddr = %p)\n",
 		sharedMemory->buffer);

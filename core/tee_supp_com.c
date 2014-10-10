@@ -117,7 +117,7 @@ out:
 }
 EXPORT_SYMBOL(tee_supp_cmd);
 
-int tee_supp_read(struct file *filp, char __user *buffer,
+ssize_t tee_supp_read(struct file *filp, char __user *buffer,
 		  size_t length, loff_t *offset)
 {
 	struct tee_context *ctx = (struct tee_context *)(filp->private_data);
@@ -170,7 +170,7 @@ out:
 	return ret;
 }
 
-int tee_supp_write(struct file *filp, const char __user *buffer,
+ssize_t tee_supp_write(struct file *filp, const char __user *buffer,
 		   size_t length, loff_t *offset)
 {
 	struct tee_context *ctx = (struct tee_context *)(filp->private_data);

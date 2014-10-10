@@ -97,10 +97,10 @@ void tee_supp_deinit(struct tee *tee);
 enum teec_rpc_result tee_supp_cmd(struct tee *tee,
 				  uint32_t id, void *data, size_t datalen);
 
-int tee_supp_read(struct file *filp, char __user *buffer,
+ssize_t tee_supp_read(struct file *filp, char __user *buffer,
 		  size_t length, loff_t *offset);
 
-int tee_supp_write(struct file *filp, const char __user *buffer,
+ssize_t tee_supp_write(struct file *filp, const char __user *buffer,
 		   size_t length, loff_t *offset);
 
 #endif

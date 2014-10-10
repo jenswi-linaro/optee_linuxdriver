@@ -23,7 +23,7 @@
 #include "tee_tz_priv.h"
 #include "handle.h"
 
-#define _TEE_TZ_NAME "arm32"
+#define _TEE_TZ_NAME "armtz"
 #define DEV (ptee->tee->dev)
 
 /* #define TEE_STRESS_OUTERCACHE_FLUSH */
@@ -170,7 +170,8 @@ static void handle_rpc_func_cmd_to_supplicant(struct tee_tz *ptee,
 	inv.res = TEEC_ERROR_NOT_IMPLEMENTED;
 	inv.nbr_bf = arg32->num_params;
 	for (n = 0; n < arg32->num_params; n++) {
-		inv.cmds[n].buffer = (void *)params[n].u.memref.buf_ptr;
+		inv.cmds[n].buffer =
+			(void *)(uintptr_t)params[n].u.memref.buf_ptr;
 		inv.cmds[n].size = params[n].u.memref.size;
 		switch (params[n].attr & TEESMC_ATTR_TYPE_MASK) {
 		case TEESMC_ATTR_TYPE_VALUE_INPUT:
@@ -208,7 +209,7 @@ static void handle_rpc_func_cmd_to_supplicant(struct tee_tz *ptee,
 			 * instance when loading a TA.
 			 */
 			params[n].u.memref.buf_ptr =
-					(uint32_t)inv.cmds[n].buffer;
+					(uint32_t)(uintptr_t)inv.cmds[n].buffer;
 			params[n].u.memref.size = inv.cmds[n].size;
 			break;
 		default:
@@ -285,7 +286,7 @@ static u32 handle_rpc(struct tee_tz *ptee, struct smc_param *param)
 		break;
 	default:
 		dev_warn(DEV, "Unknown RPC func 0x%x\n",
-			 TEESMC_RETURN_GET_RPC_FUNC(param->a0));
+			 (u32)TEESMC_RETURN_GET_RPC_FUNC(param->a0));
 		break;
 	}
 
@@ -602,8 +603,8 @@ static int tz_invoke(struct tee_session *sess, struct tee_cmd *cmd)
 	tee = sess->ctx->tee;
 	ptee = tee->priv;
 
-	dev_dbg(DEV, "> sessid %p cmd %p type %x\n",
-		(void *)sess->sessid, (void *)cmd->cmd, cmd->param.type);
+	dev_dbg(DEV, "> sessid %x cmd %x type %x\n",
+		sess->sessid, cmd->cmd, cmd->param.type);
 
 	if (!CAPABLE(tee)) {
 		dev_dbg(tee->dev, "< not capable\n");
@@ -713,7 +714,7 @@ static int tz_close(struct tee_session *sess)
 		return TEEC_ERROR_OUT_OF_MEMORY;
 	}
 
-	dev_dbg(DEV, "> [%p]\n", (void *)sess->sessid);
+	dev_dbg(DEV, "> [%x]\n", sess->sessid);
 
 	memset(arg32, 0, sizeof(*arg32));
 	arg32->cmd = TEESMC_CMD_CLOSE_SESSION;
@@ -978,7 +979,7 @@ static int configure_shm(struct tee_tz *ptee)
 					     ptee->shm_vaddr, ptee->shm_paddr);
 
 	if (!ptee->shm_pool) {
-		dev_err(DEV, "shm pool creation failed (%d)", shm_size);
+		dev_err(DEV, "shm pool creation failed (%zu)", shm_size);
 		ret = -EINVAL;
 		goto out;
 	}
@@ -986,7 +987,7 @@ static int configure_shm(struct tee_tz *ptee)
 	if (ptee->shm_cached)
 		tee_shm_pool_set_cached(ptee->shm_pool);
 out:
-	dev_dbg(DEV, "< ret=%d pa=0x%lX va=0x%p size=%d, %scached",
+	dev_dbg(DEV, "< ret=%d pa=0x%lX va=0x%p size=%zu, %scached",
 		ret, ptee->shm_paddr, ptee->shm_vaddr, shm_size,
 		(ptee->shm_cached == 1) ? "" : "un");
 	return ret;

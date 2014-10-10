@@ -126,7 +126,7 @@ static const char *const tee_state_string[] = {
 	"invalid",
 };
 
-static ssize_t show_state(struct device *device,
+static ssize_t tee_show_state(struct device *device,
 			  struct device_attribute *attr, char *buf)
 {
 	struct tee *tee = dev_get_drvdata(device);
@@ -142,7 +142,7 @@ static struct device_attribute device_attrs[] = {
 	__ATTR_RO(stat),
 	__ATTR_RO(info),
 	__ATTR(test, (S_IWUGO | S_IRUGO), test_show, test_store),
-	__ATTR(state, S_IRUGO, show_state, NULL),
+	__ATTR(state, S_IRUGO, tee_show_state, NULL),
 	__ATTR(name, S_IRUGO, name_show, NULL),
 	__ATTR(refcount, S_IRUGO, refcount_show, NULL),
 	__ATTR(type, S_IRUGO, type_show, NULL),

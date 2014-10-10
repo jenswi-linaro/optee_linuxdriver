@@ -34,5 +34,7 @@ optee_armtz-objs += \
 endif
 
 ifeq ($(CONFIG_ARM64),y)
+optee_armtz-objs += \
+	tee_smc-arm64.o
 endif
 

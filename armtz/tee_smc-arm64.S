@@ -23,9 +23,9 @@
 #define SMC_PARAM_X4_OFFS	32
 #define SMC_PARAM_X6_OFFS	48
 
-	/* void tee_smc_call64(struct smc_param64 *param); */
-	.globl	tee_smc_call64
-ENTRY(tee_smc_call64)
+	/* void tee_smc_call(struct smc_param *param); */
+	.globl	tee_smc_call
+ENTRY(tee_smc_call)
 	stp	x28, x30, [sp, #-16]!
 	mov	x28, x0
 	ldp	x0, x1, [x28, #SMC_PARAM_X0_OFFS]
@@ -37,4 +37,4 @@ ENTRY(tee_smc_call64)
 	stp	x2, x3, [x28, #SMC_PARAM_X2_OFFS]
 	ldp	x28, x30, [sp], #16
 	ret
-ENDPROC(tee_smc_call64)
+ENDPROC(tee_smc_call)

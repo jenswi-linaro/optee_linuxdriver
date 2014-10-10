@@ -234,8 +234,8 @@ TEEC_Result TEEC_AllocateSharedMemory(TEEC_Context *context,
 	sharedMem->registered = 0;
 	sharedMem->flags |= tee_shm->flags;
 	/* TODO fixme will not work on 64-bit platform */
-	sharedMem->fd = (int)(uintptr_t)tee_shm;
-	BUG_ON(tee_shm != (struct tee_shm *)(uintptr_t)sharedMem->fd);
+	sharedMem->d.fd = (int)(uintptr_t)tee_shm;
+	BUG_ON(tee_shm != (struct tee_shm *)(uintptr_t)sharedMem->d.fd);
 
 	return TEEC_SUCCESS;
 }
@@ -252,7 +252,7 @@ void TEEC_ReleaseSharedMemory(TEEC_SharedMemory *sharedMemory)
 		return;
 
 	/* TODO fixme will not work on 64-bit platform */
-	shm = (struct tee_shm *)(uintptr_t)sharedMemory->fd;
+	shm = (struct tee_shm *)(uintptr_t)sharedMemory->d.fd;
 
 	pr_info("TEEC_ReleaseSharedMemory (vaddr = %p)\n",
 		sharedMemory->buffer);

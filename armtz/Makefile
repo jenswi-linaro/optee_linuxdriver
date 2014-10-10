@@ -1,4 +1,3 @@
-CFG_TEE_CORE_CORE_TARGET := armv7
 
 #########################################################################
 # Set Internal Variables                                                #
@@ -22,9 +21,9 @@ ccflags-y+=-DCFG_TEE_TA_LOG_LEVEL=${CFG_TEE_TA_LOG_LEVEL}
 secext := $(call as-instr,.arch_extension sec,+sec)
 AFLAGS_stm-smc.o := -Wa,-march=armv7-a$(secext)
 
-obj-m += optee_arm32.o
+obj-m += optee_armtz.o
 
-optee_arm32-objs:=   \
+optee_armtz-objs:=   \
 		tee_tz_drv.o \
 		tee_mem.o \
 		stm-smc.o \

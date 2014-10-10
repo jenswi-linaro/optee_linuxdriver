@@ -7,6 +7,4 @@
 #
 
 obj-y += core/
-obj-y += arm32/
-#obj-y += arm64/
-
+obj-y += armtz/

@@ -41,6 +41,13 @@ static struct tee_tz *tee_tz;
 
 static struct handle_db shm_handle_db = HANDLE_DB_INITIALIZER;
 
+
+/* Temporary workaround until we're only using post 3.13 kernels */
+#ifdef ioremap_cached
+#define ioremap_cache	ioremap_cached
+#endif
+
+
 /*******************************************************************
  * Calling TEE
  *******************************************************************/
@@ -895,7 +902,7 @@ static int register_outercache_mutex(struct tee_tz *ptee, bool reg)
 	paddr = param.a2;
 	dev_dbg(DEV, "outer cache shared mutex paddr 0x%lx\n", paddr);
 
-	vaddr = ioremap_cached(paddr, sizeof(u32));
+	vaddr = ioremap_cache(paddr, sizeof(u32));
 	if (vaddr == NULL) {
 		dev_warn(DEV, "TZ l2cc mutex disabled: ioremap failed\n");
 		ret = -ENOMEM;
@@ -965,7 +972,7 @@ static int configure_shm(struct tee_tz *ptee)
 	ptee->shm_cached = (bool)param.a3;
 
 	if (ptee->shm_cached)
-		ptee->shm_vaddr = ioremap_cached(ptee->shm_paddr, shm_size);
+		ptee->shm_vaddr = ioremap_cache(ptee->shm_paddr, shm_size);
 	else
 		ptee->shm_vaddr = ioremap_nocache(ptee->shm_paddr, shm_size);
 
